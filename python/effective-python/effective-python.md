@@ -168,9 +168,110 @@ python提供了比较特殊的语法：循环后面可以直接编写else块
 * 函数在遇到特殊情况时，应该抛出异常，而不要返回None。调用者看到异常后，应该编写相应代码处理它们。
 
 ## 第15条： 了解如何在闭包里使用外围作用域的变量
+在表达式中引用变量时，python解释器将按以下顺序查找：
+	1. 当前函数作用域
+	2. 任何外围作用域（例如，包含当前函数的其它函数）
+	3. 包含当前代码的模块的作用域（也叫全局作用域，global scope)
+	4. 内置作用域(也就是包含len及str等函数的作用域)
+	5. 若没找到则抛出NameError异常
 
-## 第16条：
-## 第17条：
+给变量赋值时，规则有所不同：  
+	**在当前模块中若无定义，则在当前模块内定义这个变量，不会去上级（或外围）作用域去查找。**
+	目的是防止函数的每个赋值操作污染外围作用域
+示例代码：  
+
+```python
+def sort_priority(values, group):
+	"""sort values by prioriy group"""
+	found = False
+	def helper(x):
+		if x in group:
+			print("found !!!")
+			found = True #此处并不是访问修改闭包（包围）函数的found而是重新定义了一个helper函数内部的found变量
+			return (0, x)
+		else:
+			return (1, x)
+	values.sort(key=helper)
+	return found
+
+if __name__ == '__main__':
+	numbers = [8,3,1,2,5,4,7,6]
+	group = {2,3,5,7}
+	found = sort_priority(numbers, group)
+	print("Found:", found)
+	print(numbers)
+
+>>>
+Found!!!
+Found!!!
+Found!!!
+Found!!!
+Found: False 
+[2, 3, 5, 7, 1, 4, 6, 8]
+```
+python3中，要想获取闭包内的数据，可以在内层空间中用nonlocal语句声明。
+
+```python
+def sort_priority3(values, group):
+	"""sort values by prioriy group"""
+	found = False
+	def helper(x):
+		nonlocal found
+		if x in group:
+			found = True
+			return (0, x)
+		else:
+			return (1, x)
+	values.sort(key=helper)
+	return found
+
+if __name__ == '__main__': numbers = [8,3,1,2,5,4,7,6]
+	group = {2,3,5,7}
+	found = sort_priority3(numbers, group)
+	print("Found:", found)
+	print(numbers)
+
+>>>
+Found: True
+[2, 3, 5, 7, 1, 4, 6, 8]
+```
+与nonlocal类似的是global语句声明，前者声明的是闭包的外围函数中的变量，而后者声明的是模块的全局变量。
+python2也支持global语句。
+python2不支持nonlocal语句，若想达到类似效果，可用以下技巧：
+
+```python
+def sort_priority(values, group):
+	"""sort values by prioriy group"""
+	found2 = [False,]
+	def helper(x):
+		if x in group:
+			found2[0] = True #像是在强制的读取
+			return (0, x)
+		else:
+			return (1, x)
+	values.sort(key=helper)
+	return found2[0]
+
+if __name__ == '__main__':
+	numbers = [8,3,1,2,5,4,7,6]
+	group = {2,3,5,7}
+	found2 = sort_priority(numbers, group)
+	print("Found2:", found2)
+	print(numbers)
+
+>>>
+Found: True
+[2, 3, 5, 7, 1, 4, 6, 8]
+```
+最后，为了代码可读性，尽量少用global及nonlocal
+
+## 第16条： 考虑用生成器来改写直接返回列表的函数
+	1. 使用生成器有时结果更清晰:直接使用yield返回结果
+	2. 节省资源，每次调用才产生一个结果，不必一下子把所有结果计算出来
+	3. 不方便之处就是不能重复调用,因为每次调用会改变内部某些状态。
+
+## 第17条： 在参数上面迭代时，要多加小心
+
 ## 第18条：
 ## 第19条：
 ## 第20条：
