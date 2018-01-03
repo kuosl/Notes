@@ -271,12 +271,191 @@ Found: True
 	3. 不方便之处就是不能重复调用,因为每次调用会改变内部某些状态。
 
 ## 第17条： 在参数上面迭代时，要多加小心
+迭代器只产生一轮结果，在抛出StopIteration异常的迭代器或生成器上面继续迭代第二轮是不会有结果的。
+在已经迭代完的迭代器上继续迭代时，有时不报错。因为for循环，list构造器及标准库中许多其它函数
+都认为正常的操作过程中完全有可能出现StopIteration异常，这些函数没办法区别这个迭代
+器本来就没有输出或是已经用完了。
 
-## 第18条：
-## 第19条：
-## 第20条：
-## 第21条：
-## 第22条：
+## 第18条： 用数量可变的位置参数减少视觉杂讯
+可以使用*args（可变数量参数）来在处理可选参数列表
+* 不使用可变数量参数
+
+```python
+	def log(msg, vals):
+		if not vals:
+			print(msg)
+		else:
+			val_str = ', '.join(str(x) for x in vals)
+			print('%s: %s' % (msg, val_str))
+
+	log('my num are', [1,2])
+	log('hi', [])
+	log('hi')
+
+>>>
+      8 log('my num are', [1,2])
+      9 log('hi', []) #必须使用一个空表占位
+---> 10 log('hi') #否则...
+
+TypeError: log() takes exactly 2 arguments (1 given)
+```
+
+* 使用可变数量参数
+
+```python
+	def log(msg, *args):
+		if not args:
+			print(msg)
+		else:
+			val_str = ', '.join(str(x) for x in args)
+			print('%s: %s' % (msg, val_str))
+
+	log('my num are', [1,2])
+	log('hi', []) # 空表不再必要，留着它也会原样输出
+	log('hi')     # OK
+
+>>>
+my num are: [1, 2]
+hi: [] 
+hi
+
+	# 若参数中出现变量则需要在参数前加上星*
+	fav = [7, 33, 9]
+	log('Favortie colors', *fav)
+
+>>>
+Favorite colrs: 7, 33, 9
+```
+
+**接受数量可变参数会带来两个问题：**
+1. 可变参数在付给函数时，总是要先转化成元组。这意味着若拿生成器作为参数来调用，python必须先把生成器完整的迭代一轮，然后放在元组中，这可能消耗大量内存。
+	**因此只有确认可变数量参数只是有限个数时才应该使用。**
+2. 若以后为函数添加新的位置参数时，如果只修改函数定义而不修改旧有的调用代码，则会产生难以发现的问题。
+因为新添加的位置参数会被它后面的可变数量参数掩盖。
+	为避免这种情况，应当使用关键字指定的参数来扩展这种接受*args的函数。
+
+## 第19条： 用关键字参数来表达可选的行为
+位置参数必须出现在关键字参数之前。
+关键字参数有三个好处：
+	1. 容易理解
+	2. 可提供默认值
+	3. 上文提到的扩充数量可变参数函数
+
+## 第20条： 用None和文档字符串来描述具有动态默认值的参数
+动态默认值参数：比如想用当前时间（动态变化的）表示when的默认值
+
+```
+def log(msg, when=datetime.now())
+	'''肯定会执行失败，因为when只执行一次，在模块加载函数时确认when的值'''
+	print("%s: %s" % (when, msg))
+```
+在Python中若想正确的实现动态默认值，习惯上把默认值设为None，并在文档字符串docstring
+里面把None所对应的实际行为描述出来。编写函数代码时，若发现该参数值为None，则将其设为实际的默认值。
+
+```python
+def log(msg, when=None):
+	"""
+	Log a message whith a timestamp.
+
+	Args:
+		msg: message to print
+		when: datetime of when the message occurred.
+			Defaults to the present time.
+	"""
+	when = datetime.now() if when is None else when
+	print("%s: %s" % (when, msg))
+
+log('Hi there!')
+sleep(0.1)
+log('Hi again!')
+
+>>>
+2017-11-11 11:11:11.0555 Hi there!
+2017-11-11 11:11:11.1555 Hi Again!
+```
+若参数的实际默认值是可变类型(mutable), 比如{}, []等动态的值，一定要使用None作为形参的默认值。
+形参中指定的默认值只会在模块加载时评估一次，所有调用这个函数的地方都共享一个default值，造成逻辑问题。
+正确的办法就是使default的默认值设为None
+
+```python
+# 错误的默认值
+def decode(data, default={})
+	try:
+		return json.load(data)
+	except ValueError:
+		return defult
+
+# 正确的默认值应该是None
+def decode2(data, default=None)
+	"""
+	Load JSON data from a string.
+	
+
+	Args:
+		data: JSON data to decode.
+		default: Value to return if decoding fails.
+			Defaults to an empty dictionary.
+	"""
+	if default is None:
+		default = {}
+	try:
+		return json.load(data)
+	except ValueError:
+		return defult
+```
+
+## 第21条： 用只能以关键字形式指定的参数来确保代码明晰
+python3中，可以定义一种只能以关键字形式来指定的参数，从而确保调用该函数的代码读起来会比较明确。
+参数列表中的*号，标志着位置参数就此终结，之后的那些参数，都只能以关键字形式来指定。
+
+```python3
+# Python 3
+def safe_division(number, divisor, *,
+				  ignore_overflow=False,
+				  ignore_zero_division=False):
+	pass
+
+
+In [3]: safe_division(1,2,True, False)
+>>>
+---------------------------------------------------------------------------
+TypeError                                 Traceback (most recent call last)
+<ipython-input-3-87d11d5dc098> in <module>()
+----> 1 safe_division(1,2,True, False)
+
+TypeError: safe_division() takes 2 positional arguments but 4 were given
+
+In [4]: safe_division(1,2,ignore_overflow=True, ignore_zero_division=False)
+>>>
+
+In [5]: safe_division(1,2) # 不指定位置参数，使用默认参数
+>>>
+
+```
+
+在python2 中实现只能以关键字来指定的参数
+python2 中没有以上的语法支持。
+不过可以在参数列表中使用**操作符，并且令函数在遇到无效的调用时抛出TypeErrors, 从而实现以上类似功能。
+同以上python3的方式相比，接受任意数量的关键字参数，因此需要在函数实现排除不想要的位置参数。
+用pop方法把期待的关键字参数从kwargs字典中取走，若字典的键里面没有那个关键字，那么pop的第二个参数就会成为默认值。
+最后为了防止调用者提供无效参数值，需要确认kwargs字典里面已经没有关键字参数了。
+
+```python2
+# Python 2
+def safe_division(numberm, divisor, **kwargs)L
+	ignore_overflow = kwargs.pop('ignore_overflow', False)
+	ignore_zero_division = kwargs.pop('ignore_zero_division', False)
+	if kwargs:	# 查看是否还有参数剩余，这些就是调用者提供的多余未期待参数
+		raise TypeError('Unexpected ** kwargs: %r' % kwargs)
+	# ...
+```
+同Python3版本的函数一样不接受位置参数
+
+# 第3章 类与继承
+Python提供了继承，多态，封闭等各种OOB特性。
+
+## 第22条： 尽量用辅助类来维护程序的状态，而不要用字典和元组
+
 ## 第23条：
 ## 第24条：
 ## 第25条：
