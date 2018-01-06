@@ -106,34 +106,34 @@ enumerate(flavor_list, 2)
 
 ## 第12条：不要在for和while循环后写else块
 python提供了比较特殊的语法：循环后面可以直接编写else块
-	```python
+	​```python
 	for i in range(3):
 		print('Loop %d" % i)
 	else
 		print('Else block!")
-
+	
 	>>> 正常执行，执行了else
 	Loop 0
 	Loop 1
 	Loop 2
 	Else block!
-	```
+	​```
 
 可能使用人误解为：若循环没有正常执行才执行else. 
 而实际是循环中有break(即使是在最后一步break)，else才不会执行
-	```python
+	​```python
 	for i in range(3):
 		print i
 		if i == 2: #在最后一步break
 			break
 	else:
 		print 'xxxxxxxx'
-
+	
 	>>> 不会执行else
 	0
 	1
 	2
-	```
+	​```
 在for x in []: 或 while False: 之类的循环后的else会马上执行
 
 
@@ -141,30 +141,30 @@ python提供了比较特殊的语法：循环后面可以直接编写else块
 ## 第13条：
 异常处理考虑四种不同的时机：try/except/else/finally
 1. finally块: 既要将异常向上传播，又要在异常发生时执行清理工作
-	```python
-	handle = open('/tmp/random_data.txt') # 可能抛出IOError
-	try:
-		data  = handle.open()			# 可能抛出UnicodeDecodeError
-	finally:
-		handle.close()				    #  always runs after try
-	```
+  ```python
+  handle = open('/tmp/random_data.txt') # 可能抛出IOError
+  try:
+  	data  = handle.open()			# 可能抛出UnicodeDecodeError
+  finally:
+  	handle.close()				    #  always runs after try
+  ```
 2. else块: try块没有发生异常，就执行else块
-	可以用来缩减try块中的代码量，并把没有发生异常时所要执行的语句与try/except代码块隔开
-	必须有except块
-	```python
-	def load_json_key(data, key):
-		try:
-			result_dict = json.loads(data) # may raise ValueError
-		except ValueError as e:
-			raise KeyError from e
-		else:
-			return result_dict[key]			# May raise KeyError
-	```
+  可以用来缩减try块中的代码量，并把没有发生异常时所要执行的语句与try/except代码块隔开
+  必须有except块
+  ```python
+  def load_json_key(data, key):
+  	try:
+  		result_dict = json.loads(data) # may raise ValueError
+  	except ValueError as e:
+  		raise KeyError from e
+  	else:
+  		return result_dict[key]			# May raise KeyError
+  ```
 # 第2章 函数
 
 ## 第14条： 尽量用异常来表示特殊情况。而不要返回None
 * 使用None这个返回值来表示特殊意义的函数，容易使用调用者犯错，因为None和0及空字符串之类的值，在条件表达式都会评估为False
-	* 除非返回值为无组，比如：第一个返回值为状态，第二个返回值才是结果，但这种方式使用不太直观
+  * 除非返回值为无组，比如：第一个返回值为状态，第二个返回值才是结果，但这种方式使用不太直观
 * 函数在遇到特殊情况时，应该抛出异常，而不要返回None。调用者看到异常后，应该编写相应代码处理它们。
 
 ## 第15条： 了解如何在闭包里使用外围作用域的变量
@@ -329,10 +329,10 @@ Favorite colrs: 7, 33, 9
 
 **接受数量可变参数会带来两个问题：**
 1. 可变参数在付给函数时，总是要先转化成元组。这意味着若拿生成器作为参数来调用，python必须先把生成器完整的迭代一轮，然后放在元组中，这可能消耗大量内存。
-	**因此只有确认可变数量参数只是有限个数时才应该使用。**
+  **因此只有确认可变数量参数只是有限个数时才应该使用。**
 2. 若以后为函数添加新的位置参数时，如果只修改函数定义而不修改旧有的调用代码，则会产生难以发现的问题。
-因为新添加的位置参数会被它后面的可变数量参数掩盖。
-	为避免这种情况，应当使用关键字指定的参数来扩展这种接受*args的函数。
+  因为新添加的位置参数会被它后面的可变数量参数掩盖。
+  为避免这种情况，应当使用关键字指定的参数来扩展这种接受*args的函数。
 
 ## 第19条： 用关键字参数来表达可选的行为
 位置参数必须出现在关键字参数之前。
@@ -465,6 +465,50 @@ Python提供了继承，多态，封闭等各种OOB特性。
 
 ## 第24条：以@classmethod的形式的多态去通用地构建对象
 在python中不仅对象支持多态，类也支持多态。
+
+多态，使得继承体系中的多个类都能以各自所独有的方式来实现某个方法，有相同的接口，但执行不同的行为。
+
+```python
+#########################################################
+## 实现一套MapReduce流程	################################
+#########################################################
+
+# 1. 定义公共基类表示输入的数据
+class InputData(object):
+	def read(self):
+		raise NotImplementedError
+
+# 1.1 具体的子类，从磁盘读取数据
+class PathInputData(InputData)
+	def __init__(self, path):
+		super().__init__()
+		self.path = path
+
+	def read(self):
+		return open(self.path).read()
+
+# 可能有InputData的其它子类，比如从网络读取并解压数据
+# ...
+
+# 2. 为MapReduce工作线程定义一套类似的抽象接口，以便用标准方式处理输入数据
+class Workder(object):
+	def __init__(self, input_data):
+		self.input_data = input_data
+        self.result = None
+    def map(self):
+        raise NotImplementedError
+    def reduce(self, other):
+        raise NotImplementedError
+    
+# 2.1 定义具体的Worker子类，以实现MapReduce功能
+# 实现简单的换行符计数器
+class LineCounterWorker(Worker):
+    def map(self):
+		data = self.input_data.read()
+        self.result = data.count('\n')
+    def reduce(self, other):
+		self.result += other.result
+```
 
 ## 第25条：
 ## 第26条：
@@ -608,7 +652,7 @@ Producer done
 ### Queue的线程管理方法：
 1. Queue.join()等待所有线程结束
 2. 其它线程中需要调用Queue.task_done()，用来告知主控线程来退出本身线程，否则本线程会阻塞在get()/put()方法上
-	> Queue.task_done()调用之后，本线程会立即退出，不管queue中有无数据或空间  
+  > Queue.task_done()调用之后，本线程会立即退出，不管queue中有无数据或空间  
 3. 不再需要thread.join()
 
 ```python
@@ -680,12 +724,12 @@ for n in g:
 #### 函数转换为生成器generator
 1. 如果一个函数包含yield关键字，那么这个函数不再是一个普通函数，而是一个generator.  
 2. generator与一般函数执行流程不同
-	2.1 函数是顺序执行，遇到return或最后一条语句就返回。
-	2.2 而generator在每次调用next()的时候执行，遇到yield语句返回，再次执行时从上次返回yield语句处继续执行。
+  2.1 函数是顺序执行，遇到return或最后一条语句就返回。
+  2.2 而generator在每次调用next()的时候执行，遇到yield语句返回，再次执行时从上次返回yield语句处继续执行。
 3. generator执行方法：
-	3.1 next不需要向生成器传递参数
-	3.2 send可以传入参数
-	3.3 生成器函数开始时需要执行g.send(None)或next(g)
+  3.1 next不需要向生成器传递参数
+  3.2 send可以传入参数
+  3.3 生成器函数开始时需要执行g.send(None)或next(g)
 
 ```python
 def odd():
@@ -767,7 +811,7 @@ def composed():
 ```
 
 2.  python2的生成器不支持return语句，需要将最后的return的参数使用自定义的Exception子类包装起来，然后用try/except raise抛出。
-**python2代码的协和函数模拟return**
+  **python2代码的协和函数模拟return**
 
 ```python
 #python 2
@@ -860,9 +904,9 @@ results = list(pool.map(gcd, numbers))
 end =   time()
 print('Took %.3f    seconds'    %   (end    -   start))
 ```
-	
+
 3. 内置的concurrent.future模块利用另外一个名叫multiprocessing的内置模块，以子进程的形式平行地运行多个解释器，从而令python能够利用多核cpu来提升速度。    
-改用上一例子中的另一个函数ProcessPoolExcutor: 
+  改用上一例子中的另一个函数ProcessPoolExcutor: 
 
 ```python
 from concurrent.futures import ProcessPoolExecutor 
@@ -889,10 +933,10 @@ print('Took %.3f    seconds'    %   (end    -   start))
 
 	In [10]: run 411.py
 	Took 0.439    seconds
-
+	
 	In [11]: run 412.py
 	Took 0.579    seconds
-
+	
 	In [12]: run 413.py
 	Took 0.270    seconds
 
@@ -929,7 +973,7 @@ print('Took %.3f    seconds'    %   (end    -   start))
 		# define iniside a nest wrapperjkk
 ```
 * 使用functools重修正以下俩问题  
-	**functools.wraps修饰器会把内部函数相关的重要元数据全部复制到外围函数**
+  **functools.wraps修饰器会把内部函数相关的重要元数据全部复制到外围函数**
 
 ```python
 +	from functools import wraps
@@ -962,7 +1006,7 @@ print('Took %.3f    seconds'    %   (end    -   start))
 
 ## 第43条 使用contextlib和with语句来改写可复用的try/finally
 * 使用With,比使用try/finally更简洁, 省去了后者一些重复代码。
-*前提是类支持with语句*  
+  *前提是类支持with语句*  
 
 ```python
 lock = Lock()
@@ -1001,7 +1045,7 @@ will exit with
 ```
 
 * **内置的contextlib模块提供了名叫contextmanager的修饰器**，可使函数支持with
-	修饰器里的函数通过yield向with语句返回一个值，赋值给as后的变量
+  修饰器里的函数通过yield向with语句返回一个值，赋值给as后的变量
 
 ```python
 from contextlib import contextmanager
@@ -1057,7 +1101,7 @@ with open('xxx') as handle:
 ## 第44条 用copyreg实现可靠的pickle操作
 内置的pickle模块将python对象序列化及反序列化, 在程序之间传递python对象  
 1. 通过copyreg模块注册xx函数，使类**新加的字段**具有默认值。
-*要求后来增加的字段在__init__中具体默认值*  
+  *要求后来增加的字段在__init__中具体默认值*  
 ```python
 	# 使用情景： GameState类后来又加了新字段，导致反序列化失
 	def pickle_game_state(game_state):
@@ -1072,7 +1116,7 @@ with open('xxx') as handle:
 ```
 
 2. 用版本号来管理类, 处理类后来**删除某些字段** 
-	* 从现在类中删除某些字段，会导致新类接受多余参数，导致新类与旧类不兼容
+  * 从现在类中删除某些字段，会导致新类接受多余参数，导致新类与旧类不兼容
 
 ```python
 	# 使用情景： GameState加了新字段，导致反序列化失败。
@@ -1092,8 +1136,8 @@ with open('xxx') as handle:
 ```
 
 3. 修正类更名后无法反序列化
-	* 换名之后会导致反序列化时找不到原来的类（被更名了）
-	* copyreg.picker(NewGameState, xx)
+  * 换名之后会导致反序列化时找不到原来的类（被更名了）
+  * copyreg.picker(NewGameState, xx)
 
 
 ## 第45条 应该用datetime模块，而不是time模块处理本地时间
@@ -1106,102 +1150,102 @@ python提供了两种处理时间的模块：
 ## 第46条内置算法和数据结构
 
 *  数据结构
-	* 双向队列，可以在头尾才能常数级别的插入删除数据，而list只能在尾部达到这样的性能
-	```python
-	fifo = deque()
-	fifo.append(1)
-	x = fifo.popleft()
-	```
-	* 有序字典保留插入顺序，普通dict的key是基于快速哈希，在相同内容的dict迭代可能出现不同的输出顺序。  
-	```python
-	a = OrderDict()
-	a['foo'] = 1
-	a['bar'] = 2
-	b = OrderDict()
-	b['foo'] = 'red'
-	b['bar'] = 'blue'
-	for v1, v2 in zip(a.values(). b.values()):
-		print(v1, v2)
-	>>>
-	1 red
-	2 blue
-	```
-	* 带有默认值的字典
-	```python
-	stats = defaultdict(int) # default int value is 0
-	stats['my_counter'] += 1
-	```
-	* 堆队列（优先级队列） heapq模块提供了heappush, heappop, nsmallest等函数，能在标准的list类型创建堆
-	```python
-	a = []
-	heappush(a, 5)
-	heappush(a, 3)
-	heappush(a, 7)
-	heappush(a, 4)
-	#a此时已经是顺序排列的队列了
-	a
-	>>>
-	[3, 4, 5, 7]
-	print( heappop(a), heappop(a), heappop(a), heappop(a))
-	>>>
-	3 4 5 7
-	# 返回最N小的列表
-	print(nsmallest(1, a))
-	>>>
-	[3]
-	```
-	* 二分查找bisect模块， bisect_left(x, 7788) 返回待搜索值在序列中的插入点  
-	```python
-	# list的查找时间与长度成正比
-	x = list(range(10**6))
-	i =  x.index(7788)
-	# bisect二分查找, 对数级别时间复杂度
-	from bisect import bisect_left
-	i = bisect_left(x, 777888)
-	```
+  * 双向队列，可以在头尾才能常数级别的插入删除数据，而list只能在尾部达到这样的性能
+  ```python
+  fifo = deque()
+  fifo.append(1)
+  x = fifo.popleft()
+  ```
+  * 有序字典保留插入顺序，普通dict的key是基于快速哈希，在相同内容的dict迭代可能出现不同的输出顺序。  
+  ```python
+  a = OrderDict()
+  a['foo'] = 1
+  a['bar'] = 2
+  b = OrderDict()
+  b['foo'] = 'red'
+  b['bar'] = 'blue'
+  for v1, v2 in zip(a.values(). b.values()):
+  	print(v1, v2)
+  >>>
+  1 red
+  2 blue
+  ```
+  * 带有默认值的字典
+  ```python
+  stats = defaultdict(int) # default int value is 0
+  stats['my_counter'] += 1
+  ```
+  * 堆队列（优先级队列） heapq模块提供了heappush, heappop, nsmallest等函数，能在标准的list类型创建堆
+  ```python
+  a = []
+  heappush(a, 5)
+  heappush(a, 3)
+  heappush(a, 7)
+  heappush(a, 4)
+  #a此时已经是顺序排列的队列了
+  a
+  >>>
+  [3, 4, 5, 7]
+  print( heappop(a), heappop(a), heappop(a), heappop(a))
+  >>>
+  3 4 5 7
+  # 返回最N小的列表
+  print(nsmallest(1, a))
+  >>>
+  [3]
+  ```
+  * 二分查找bisect模块， bisect_left(x, 7788) 返回待搜索值在序列中的插入点  
+  ```python
+  # list的查找时间与长度成正比
+  x = list(range(10**6))
+  i =  x.index(7788)
+  # bisect二分查找, 对数级别时间复杂度
+  from bisect import bisect_left
+  i = bisect_left(x, 777888)
+  ```
 
 
 * 与迭代器相关的工具 itertools模块
-	* 连接迭代器
-		* chain 连成一个大的迭代器
-		* cycle 无限循环替代器中元素
-		* tee 产生n个相同的迭代器
-		```python
-		i1, i2 = tee('abcdefg', 2)
-		print(list(i1))
-		print(list(i2))
-		```
-		* zip_longest 只有python3有
-		```python
-		# python 3
-		print(list(zip('aaa', '2222')))
-		>>>	[('a', '2'), ('a', '2'), ('a', '2')]
-		print(list(zip_longest('aaa', '2222')))
-		>>>	[('a', '2'), ('a', '2'), ('a', '2'), (None, '2')]
-		```
-		* count(start=0, step=1) 返回从start开始的迭代器
-	* 过滤迭代器
-		* islice 切片操作 
-			* islice(iterable, stop) 或 islice(iterable, start, stop, step)
-		* dropwhile: dropwhile(条件判断函数，iterable), 返回为假的迭代器
-			* takewhile: 与上相反
-		* ifilter函数: python2有， python3, 与takewhile类似，但多了ifilter(None, iterable)，此时返回iterable中的真值，例如从range(10)中去掉了0值
-		* ifilterfalse函数: python3有， python2无, 与dropwhile类似，但多了filterfalse(None, iterable)
-		* compress(data, selections): compress('abcdef', [1,0,1,1,0,0]) ==> 'acd'
-		* izip 类似zip函数，但返回是iterable: list(izip('abc', '123')) ==> a1 b2 c3
-		* izip_longest类似于zip与zip_longest, 不够用None填充
-		* groupby(iterable, 归类条件函数)
-		```python
-		for i , k in groupby(['aa', 'bb', 'aaa', 'bbb'], len):
-			print i, list(k)
-		>>> 
-			2 ['aa', 'bb']
-			3 ['aaa', 'bbb']
-		```
-	* 组合迭代器
-		* product(*iterable[, repeat=x]) 返回迪卡尔积 product('ab', '12') ==> a1 a2 b1 b2，若参数多了repeat=x，则表示参数repeat之前的元素是x倍，可以认为是一种参数简写形式
-		* permutations(iterable, [, r]) ,返回长度为r的iterable元素的组合索引，若r省略则表示长度为长度等于iterable
-		* combination(iterable, r) 返回长度为r的子序列
+  * 连接迭代器
+    * chain 连成一个大的迭代器
+    * cycle 无限循环替代器中元素
+    * tee 产生n个相同的迭代器
+    ```python
+    i1, i2 = tee('abcdefg', 2)
+    print(list(i1))
+    print(list(i2))
+    ```
+    * zip_longest 只有python3有
+    ```python
+    # python 3
+    print(list(zip('aaa', '2222')))
+    >>>	[('a', '2'), ('a', '2'), ('a', '2')]
+    print(list(zip_longest('aaa', '2222')))
+    >>>	[('a', '2'), ('a', '2'), ('a', '2'), (None, '2')]
+    ```
+    * count(start=0, step=1) 返回从start开始的迭代器
+  * 过滤迭代器
+    * islice 切片操作 
+      * islice(iterable, stop) 或 islice(iterable, start, stop, step)
+    * dropwhile: dropwhile(条件判断函数，iterable), 返回为假的迭代器
+      * takewhile: 与上相反
+    * ifilter函数: python2有， python3, 与takewhile类似，但多了ifilter(None, iterable)，此时返回iterable中的真值，例如从range(10)中去掉了0值
+    * ifilterfalse函数: python3有， python2无, 与dropwhile类似，但多了filterfalse(None, iterable)
+    * compress(data, selections): compress('abcdef', [1,0,1,1,0,0]) ==> 'acd'
+    * izip 类似zip函数，但返回是iterable: list(izip('abc', '123')) ==> a1 b2 c3
+    * izip_longest类似于zip与zip_longest, 不够用None填充
+    * groupby(iterable, 归类条件函数)
+    ```python
+    for i , k in groupby(['aa', 'bb', 'aaa', 'bbb'], len):
+    	print i, list(k)
+    >>> 
+    	2 ['aa', 'bb']
+    	3 ['aaa', 'bbb']
+    ```
+  * 组合迭代器
+    * product(*iterable[, repeat=x]) 返回迪卡尔积 product('ab', '12') ==> a1 a2 b1 b2，若参数多了repeat=x，则表示参数repeat之前的元素是x倍，可以认为是一种参数简写形式
+    * permutations(iterable, [, r]) ,返回长度为r的iterable元素的组合索引，若r省略则表示长度为长度等于iterable
+    * combination(iterable, r) 返回长度为r的子序列
 
 ## 第47条 在重视精度的场合使用decimal
 自带模块decimal的Decimal比普通浮点数的优点是：
@@ -1219,18 +1263,18 @@ python提供了两种处理时间的模块：
 * 类文档， 类成员函数文档
 * 函数文档
 * 以上都可以通过__doc__属性来访问
-  
+
 ## 第50条 用包来安排模块，并提供稳固的api
 * 包的构成
-	* 把__init__.py放在源文件目录下，就构成一个包
-	* 目录中的文件成为包的子模块
-	* 包的目录下可以包含其它包, 包就是包含其它模块的模块
+  * 把__init__.py放在源文件目录下，就构成一个包
+  * 目录中的文件成为包的子模块
+  * 包的目录下可以包含其它包, 包就是包含其它模块的模块
 
 *  包的两大用途
-	* 名称空间
-	* 稳固的API
-		> 为包或模块编写名为__all__的特殊属性，来减少对外暴露的API  
-		> 只有__all__中出现的名称才能被其它模块导入  
+  * 名称空间
+  * 稳固的API
+    > 为包或模块编写名为__all__的特殊属性，来减少对外暴露的API  
+    > 只有__all__中出现的名称才能被其它模块导入  
 
 ## 第51条 为自编的模块定义根异常，以将调用者与API相隔离 
 **模块所抛出的异常，同函数与类一样，都是接口的一部分**
@@ -1243,7 +1287,7 @@ class Error(Exception):
 调用者通过try/except语句来捕捉本模块产生的任何异常，这有三个好处：
 1. 调用者可根据捕获的本模块抛出的异常确认是否对本模块正确调用
 2. 若本模块抛出了根异常之外的异常，则说明本模块代码有问题, 这需要在根异常之后再加一个
-	> exception Exception as e:
+  > exception Exception as e:
 3. 便于本模块异常逻辑的细化编写, 继续编写更具体的异常子类
 
 
@@ -1328,11 +1372,11 @@ dialog.show()
 	> 缺点是容易出现问题，而且不符合PEP8风格
 
 2. 只在模块中给出函数，类和常量的定义，而不运行这些函数。
-	每个模块提供configure函数，等其它模块都引用完毕后，再在该模块上面调用一次configure，而这个configure函数则会访问其它模块的属性
-	> 缺点是需要每个模块提取出configur步骤，代码变的复杂
+  每个模块提供configure函数，等其它模块都引用完毕后，再在该模块上面调用一次configure，而这个configure函数则会访问其它模块的属性
+  > 缺点是需要每个模块提取出configur步骤，代码变的复杂
 
 3. 动态import，在函数内部使用import, 在需要时再import。 
-	> 缺点是有一定执行开销；在循环中会有反复import; 异常时调试不方便。
+  > 缺点是有一定执行开销；在循环中会有反复import; 异常时调试不方便。
 
 ## 第53条 用虚拟环境隔离项目，并重建其依赖关系
 pip安装默认是全局的，安装/升级可能导致各个软件包之间的依赖问题。  
@@ -1362,14 +1406,14 @@ pip安装默认是全局的，安装/升级可能导致各个软件包之间的�
 ## 第57条 使用pdb进行交互调试
 1. import pdb之后，调用set_trace()打上断点，然后再运行代码
 2. 主要命令
-	* bt 查看调用堆栈
-	* up 回到堆栈上一级
-	* down： 进入下一级堆栈
-	* step (s) 进入被调函数
-	* finish (f) 跳出被调函数，回到上层调用函数
-	* next (n) 下一条语句, 不进入被调函数
-	* return (r) 继续运行，跳出调试过程
-	* continue (c) 继续运行到下一断点
+  * bt 查看调用堆栈
+  * up 回到堆栈上一级
+  * down： 进入下一级堆栈
+  * step (s) 进入被调函数
+  * finish (f) 跳出被调函数，回到上层调用函数
+  * next (n) 下一条语句, 不进入被调函数
+  * return (r) 继续运行，跳出调试过程
+  * continue (c) 继续运行到下一断点
 
 ## 第58条 先分析性能再优化 
 1. 先做性能分析，使用cProfile模块的runcal方法来分析程序的性能，它会按函数调用关系单独统计每个函数的运行信息
