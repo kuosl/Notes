@@ -483,12 +483,13 @@ class PathInputData(InputData)
 	def __init__(self, path):
 		super().__init__()
 		self.path = path
-
 	def read(self):
 		return open(self.path).read()
 
 # 可能有InputData的其它子类，比如从网络读取并解压数据
 # ...
+
+###################################################################################
 
 # 2. 为MapReduce工作线程定义一套类似的抽象接口，以便用标准方式处理输入数据
 class Workder(object):
@@ -508,12 +509,283 @@ class LineCounterWorker(Worker):
         self.result = data.count('\n')
     def reduce(self, other):
 		self.result += other.result
+
+       ################################################################################################
+#怎样构建对象并协调MapReduce流程呢？
+#手工构建相关对象，并通过某些辅助函数将这些对象联系起来。
+################################################################################################
+
+# 为目录下每个文件创建一个PathInputData对象
+def generate_inputs(data_dir):
+    for name in os.listdir(data_dir):
+        yield PathInputData(os.path.join(data_dir, name))
+
+# 为每个PathInputData对象创建一个LineCountWorker
+def create_workers(input_list):
+    workers = []
+    for input_data in input_list:
+        workers.append(LineCountWorker(input_data))
+	return workers
+
+# 执行这些Workers,进行Map-Reduce过程，多线程执行最终汇总运行结果
+def excute(workers):
+    # the map process
+    threads = [Thread(target=w.map) for w in workers]
+    for thread in threads: thread.start()
+    for thread in threads: thread.join() #  主线程等待工作线程结束
+    
+    # the reduce process
+    first, rest = workers[0], workers[1:]
+    for worker in rest:
+        first.reduce(worker)
+    return first.result
+
+# 最后
+def mapreduce(data_dir):
+    inputs = generate_inputs(data_dir)
+    workers = create_workers(inputs)
+    return excute(workers)
 ```
 
-## 第25条：
-## 第26条：
-## 第27条：
-## 第28条：
+
+
+上述代码缺点是**不够通用**，**若要编写其它的InputData或Worker子类，就必须重写generate_inputs, create_workers和mapreduce函数**，以便与之匹配。—— 要解决这个问题，必须使用一种通用的方式来构建对象，**最佳方案是使用@classmethod形式的多态**。
+
+```python
+class GenericInputData(object):
+    def read(self):
+        raise NotImplementedError
+	# config是一份含有配置参数的字典，具体的GenericInputData子可以解读这些参数
+    # 这是类方法，针对是子类而言，不针对某个对象
+    # 注意第一个参数是cls, 而不是self(类方法与成员方法的区别)
+    @classmethod
+    def generate_inputs(cls, config):
+        raise NotImplementedError
+
+class PathInputData(GenericInputData):
+ 	def __init__(self, path):
+		super().__init__()
+		self.path = path
+    def read(self):
+        return open(self.path).read()
+    # 重写父类的类方法，创建具体的InputData实例
+    @classmethod
+    def generate_inputs(cls, config):
+        data_dir = config['data_dir']
+        for name in os.listdir(data_dir):
+            yield cls(os.path.join(data_dir, name))
+
+###################################################################################
+class GenericWorker(object):
+    def map(self):
+        raise NotImplementedError
+    def reduce(self, other):
+        raise NotImplementedError
+    # 这个类方法，可否用静态成员函数来理解？
+    @classmethod
+    def create_workers(cls, input_class, config):
+        workers = []
+        # input_class.generate_inputs是个类级别的多态方法
+        for input_data in input_class.generate_inputs(config):
+            # 这里使用cls形式构造GenericWorker对象，而不是以前那样使用__init__方法。
+            workers.append(cls(input_data))
+        return workers
+
+# 实现过程与以前相同
+class LineCountWorker(GenericWorker):
+	def __init__(self, input_data):
+		self.input_data = input_data
+        self.result = None
+    def map(self):
+		data = self.input_data.read()
+        self.result = data.count('\n')
+    def reduce(self, other):
+		self.result += other.result
+        
+###################################################################################
+# 执行这些Workers,进行Map-Reduce过程，多线程执行最终汇总运行结果
+def excute(workers):
+    # the map process
+    threads = [Thread(target=w.map) for w in workers]
+    for thread in threads: thread.start()
+    for thread in threads: thread.join() #  主线程等待工作线程结束
+    
+    # the reduce process
+    first, rest = workers[0], workers[1:]
+    for worker in rest:
+        first.reduce(worker)
+    return first.result
+
+###################################################################################
+# 最后重写mapreduce函数，使其变得完全通用
+def mapreduce(worker_class, input_class, config)通用:
+    workers = worker_class.create_workers(input_class, config)
+    return execute(workers)
+###################################################################################
+
+### 测试 ###
+with TemporaryDirectory() as tmpdir:
+    write_test_files(tmpdir)
+    config = {'data_dir': tmpdir}
+    result = mapreduce(LineCountWorker, PathInputData, config) 
+```
+
+
+
+**总结：**
+
+*   python中每个类只能有一个构造器，那就是\_\_init\_\_方法。
+
+*   通过@classmethod机制，可以用一种与构造器相仿的方法来构造类的对象。
+
+    ​
+
+## 第25条：用super初始化父类
+
+初始化父类的传统方法，是在子类里用子实例(\_\_init\_\_)直接显示调用父类\_\_init\_\_方法。在多重继续下，直接调超类的\_\_init\_\_可能产生无法预知的行为。
+
+下面的例子中说明，子类的初始化函数（\_\_init\_\__)**对各个基类的初始化函数执行顺序只取决于子类初始化内部调用顺序，而与子类定义头部中对各基类顺序无关——这可能造成岐义。**
+
+```python
+class MyBaseCls(object):
+    def __init__(self, value):
+        self.value = value
+class TimesTwo(object):
+    def __init__(self):
+        self.value *= 2
+class PlusFive(object):
+    def __init__(self):
+        self.value += 5
+class OneWay(MyBaseCls, TimesTwo, PlusFive):
+    def __init__(self, value):
+        MyBaseCls.__init__(self, value)
+        TimesTwo.__init__(self)
+        PlusFive.__init__(self)
+class AnotherWay(MyBaseCls, PlusFive, TimesTwo):
+    def __init__(self, value):
+        MyBaseCls.__init__(self, value)
+        TimesTwo.__init__(self)
+        PlusFive.__init__(self)
+
+foo = OneWay(5)
+print "5 * 2 + 5 == %d" % foo.value
+>> 15
+foo = AnotherWay(5)
+print "(5 + 5) * 2 == %d" % foo.value
+>> 15
+```
+
+还有问题是出现在钻石型继承结构（比如两个基类又是同一类的子类）：这个子类就会多次调用它两个基类的共同基类的初始化函数。
+
+```python
+# 钻石型继承关系，多次调用上层某个基类的初始化函数(__init__)
+class MyBaseCls(object):
+    def __init__(self, value):
+        self.value = value
+
+class TimesTwo(MyBaseCls):
+    def __init__(self, value):
+        MyBaseCls.__init__(self, value)
+        self.value *= 2
+
+class PlusFive(MyBaseCls):
+    def __init__(self, value):
+        MyBaseCls.__init__(self, value)
+        self.value += 5
+
+class OneWay(TimesTwo, PlusFive):
+    def __init__(self, value):
+        TimesTwo.__init__(self, value)
+        PlusFive.__init__(self, value)
+
+foo = OneWay(5)
+print "5 * 2 + 5 == 15 and is ", foo.value
+# 结果错误， 因为MyBaseCls.__init__第二次调用时，又将value设置为5了 
+#>> 5 * 2 + 5 == 15 and is 10
+```
+
+引用python2的super方式解决钻石型继承问题
+
+```python
+class MyBaseCls(object):
+    def __init__(self, value):
+        self.value = value
+
+class TimesFive(MyBaseCls):
+    def __init__(self, value):
+        super(TimesFive, self).__init__(value)
+        self.value *= 5
+
+class PlusTwo(MyBaseCls):
+    def __init__(self, value):
+        super(PlusTwo, self).__init__(value)
+        self.value += 2
+
+class GoodWay(TimesFive, PlusTwo):
+    def __init__(self, value):
+        super(GoodWay, self).__init__(value)
+
+# MRO计算顺序是从右向左的！！！
+foo = GoodWay(5)
+print "GoodWay is: 5 * (5 + 2) == 35 and is ", foo.value
+#>> GoodWay is: 5 * 5 + 2 == 27 and is 35
+
+```
+
+python2的super必须传入本类的名称。而**python3可以使用\_\_class\_\_可替代本类名称**。
+
+```python
+class MyBaseCls(object):
+    def __init__(self, value):
+        self.value = value
+
+class TimesFive(MyBaseCls):
+    def __init__(self, value):
+        super(__class__, self).__init__(value)
+        self.value *= 5
+
+class PlusTwo(MyBaseCls):
+    def __init__(self, value):
+        super(__class__, self).__init__(value)
+        self.value += 2
+
+class GoodWay(TimesFive, PlusTwo):
+    def __init__(self, value):
+        super(__class__, self).__init__(value)
+
+
+foo = GoodWay(5)
+print("GoodWay is: 5 * 5 + 2 == 27 and is ", foo.value)
+#>> GoodWay is: 5 * 5 + 2 == 27 and is  35
+```
+
+**总结：应该使用内置super函数初始化父类。**
+
+
+
+## 第26条：只在使用Mix-in组件制作工具类时进行多重继承
+
+在python中虽然可以但不鼓励多重继承，若一定要利用多重继承的便利及封闭特性，则应考虑编写mix-in类。
+
+mix-in类是一种小型的类，它只定义其它类可能需要提供的一套附加方法，而不定义自己的实例属性，此外它也不要求使用者调用自己的\_\_init\_\_初始函数。
+
+
+
+## 第27条：多用public属性，少用private属性
+
+以两个下划线开关的属性是private字段。
+
+子类无法访问父类的private字段。
+
+若既想封闭又想让子类可以访问到字段，则应该使用protected字段。（只是一种约定，即使用单下划线开头的字段)
+
+
+
+## 第28条：继承collections.abc以实现自定义的容器类型
+
+
+
+
 
 # 第4章 元类及属性
 
