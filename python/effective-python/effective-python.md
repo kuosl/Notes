@@ -783,22 +783,213 @@ mix-in类是一种小型的类，它只定义其它类可能需要提供的一�
 
 ## 第28条：继承collections.abc以实现自定义的容器类型
 
+(仅在python3中有这个子模块)使用collections.abc模块，可以方便地编写自定义的容器类。
 
+这里定义了一系列的抽象基类，它们提供了每一种容器所应具体的常用接口。如果自定义的容器类忘记实现这些接口，collections.abc模块会指出这些错误。
+
+它并不会帮你实现具体的通用接口，它只是提供了一些抽象接口，确保用户编写了必备函数成员。
 
 
 
 # 第4章 元类及属性
 
-## 第29条：
-## 第30条：
-## 第31条：
-## 第32条：
-## 第33条：
-## 第34条：
-## 第35条：
+metaclass只是模糊地描述了一种高于类，超乎于类的概念。
+
+## 第29条：用纯属性取代get和set方法
+
+有时为了必要的封装或保护，可能会提供一些getter/setter函数。比如：
+
+```python
+class OldResistor(object):
+    def __init__(self, ohms):
+        self._ohms = ohms
+    def get_ohms(self):
+        return self._ohms
+    def set_ohms(self, ohms):
+        self._ohms = ohms
+# 对于自增操作很麻烦
+r0 = OldResistor(2)
+r0.set_ohms(r0.get_ohms() + 3)
+```
+
+可以使用@property修饰器和setter方法来做。
+
+```python
+class VolateResistance(Resistor)：
+	def __init__(self, ohms):
+        super().__init__(ohms)
+        self._voltage = 0
+
+     @property
+    def voltage(self): # 对应于getter接口
+        return self._voltage
+    
+    @voltage.setter # 对应于setter接口
+    def voltage(self, voltage):
+        self._voltage = voltage
+        self.currnet = self._voltage / self._ohms #  为简单设置操作之外添加了一点额外操作
+```
+
+
+
+## 第30条：考虑使用@property来代替属性重构
+
+@property可以为现有的实例属性添加新的功能
+
+
+
+## 第31条：内描述符来改写需要复用的@property方法
+
+@property修饰器明显的缺点就是不便于复用。
+
+若类的若干属性访问接口实现过程都一样，使用@property必须将这些过程重复编写N次，仅过程中的变量名不一样而已。
+
+为复用这些相同的过程，python的描述符(descriptor)：python对访问操作会进行一定的转译，转译方式是按照描述符协议来确认的。**描述符可以提供\_\_get\_\_和\_\_set\_\_方法。**
+
+```python
+class Grade(object):
+    def __get__(*args, **kwargs):
+        # ...
+    def __set__(*args, **kwargs):
+        # ...
+class Exam(object):
+    # class attribute
+    math_grade = Grade()
+    writing_grade = Grade()
+    science_grade = Grade()
+
+
+exam = Exam()
+# 下列运行过程
+exam.writing_grade = 40
+# , 会被python转译为:
+Exam.__dict__['writing_grade'].__set__(exam, 40)
+# 获取属性
+print(exam.writing_grade)
+# , 会被解析为
+Exam.__dict__['writing_grade'].__get__(exam)
+```
+
+之所以**有这样的转译是因为object类的\_\_getattribute\_\_方法**。参见下条。
+
+## 第32条：用\_\_getattr\_\_, \_\_getattribute\_\_和\_\_setattr\_\_实现所需生成的属性
+
+类的属性访问钩子函数1：类对象的实例字典中找不到查询的属性，那么系统就会调用\_\_getattr\_\_。
+
+```python
+class LazyDB(object):
+    def __init__(self):
+        self.exists = 5
+
+    def __getattr__(self, name):
+        # set new attribute
+        value = "Value for %s" % name
+        setattr(self, name, value)
+        return value
+
+data = LazyDB()
+print('Before:', data.__dict__)
+print(data.foo)
+print('Before:', data.__dict__)
+print(data.__dict__)
+
+#>>>
+('Before:', {'exists': 5})
+Value for foo
+('Before:', {'foo': 'Value for foo', 'exists': 5})
+{'foo': 'Value for foo', 'exists': 5}
+```
+
+类的属性访问钩子函数1：即使在类对象的实例字典中找到了查询的属性，那么系统也会先调用\_\_getattribute\_\_。
+
+```python
+class ValidatingDB(object):
+    def __init__(self):
+        self.exists = 5
+	# 任何时候都先调用这个函数
+    def __getattribute__(self, name):
+        print('Called __getattribute__(%s)' % name)
+        try:
+            return super().__getattribute__(name)
+        except AttributeError:
+            value = "Value for %s" % name
+            # set new attribute
+            setattr(self, name, value)
+            return name
+
+data = ValidatingDB()
+print('exists:', data.exists)
+print('foo:  ', data.foo)
+print('foo:  ', data.foo)
+#>>>
+Called __getattribute__(exists)
+exists: 5
+Called __getattribute__(foo)
+foo:   foo
+Called __getattribute__(foo) # 此时已经调用了setattr
+foo:   Value for foo
+```
+
+实现通用的功能时，我们经常会在Python代码里使用内置的hasattr函数来判断对象是否已经拥有了相关的属性，并用内置的getattr函数来获取属性值。
+
+若类实现了\_\_getattribute\_\_函数，那么每次在对象上面调用hasattr或getattr时，\_\_getattribute\_\_都会执行。
+
+**使用\_\_getattribute\_\_要特别小心：若在它的实现内部访问了self.data，则会导致自我无限循环**。
+
+```python
+class BrokenDictionaryDB(object):
+    def __init__(self, data):
+        self._data = data
+    def __getattribute__(self, name):
+        print('Called __getattribute__(%s)' % name)
+        # 下面这行代码会导致无限循环
+        return self._data[name]
+
+data = BrokenDictionaryDB({'foo':3})
+data.foo
+
+#>>> 错误演示
+Called __getattribute__(foo)
+Called __getattribute__(_data)
+Called __getattribute__(_data)
+Called __getattribute__(_data)
+		... ...
+    
+##########################################################################################
+
+class FixedDictionaryDB(object):
+    def __init__(self, data):
+        self._data = data
+    def __getattribute__(self, name):
+        print('Called __getattribute__(%s)' % name)
+        # 解决办法是采用super().__getattribute__方法，从实例的属性字典里面直接获取_data
+        data_dict = super().__getattr__('_data')
+        return data_dict[name]
+
+data = FixedDictionaryDB({'foo':3})
+data.foo
+# >>> 修正后
+Called __getattribute__(foo)
+```
+
+只要对实例的属性赋值，**无论直接赋值还是通过内置的setattr函数，都会触发\_\_setattr\_\_方法。**
+
+**\_\_setattr\_\_方法的使用陷阱与\_\_getattribute\_\_类似，内部直接设置属性也会导致无限循环。**
+
+**修正方法：那么应用直接通过super()来做，以避免无限循环。**
+
+
+
+## 第33条：用元类来验证子类
+
+## 第34条：用元类来注册子类
+
+## 第35条：用元类来注解类的属性
+
 
 
 # 第5章并发与并行
+
 * 并行：计算机确实在同一时间做很多不同的事，多CPU同时执行多个程序, 在同一时刻发生 
 * 并发：计算机似乎在同一时间做很多不同的事，OS交错执行程序的方式, 在同一时间间隔发生
 
