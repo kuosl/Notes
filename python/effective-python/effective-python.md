@@ -16,14 +16,16 @@
 	• import 语句始终諈文件开头  
 	• 引入模块时，应总使用绝对名称，而不应使用根据当前模块的路径而使用相对名称，如：引入foo包中bar模块，应完整写出from bar import foo, 而不应简写import foo  
 	• 若非要相对名称来import， 则应from . import foo  
-	• import语句分为三块：1标准库模块 2第三方模块 3自用模块   
+	• 将import语句分为三块：1标准库模块 2第三方模块 3自用模块   
+
 
 
 ## 第3条 了解bytes, str, unicode  
-| python版本 | 含原始8位值| 含unicode字符 |  
-| -------	|	------	|	----	|
-| python3	|	bytes	| str	|
-| python2	|	str	| unicode	|
+
+| python版本 | 含原始8位值 | 含unicode字符 |
+| ---------- | ----------- | ------------- |
+| python2    | str         | unicode       |
+| Python3    | bytes       | str           |
 
 
 * 两个python版本中， unicode并没有与特定二进制编码关联
@@ -32,8 +34,12 @@
 * python2中7位值的ascii值时，unicode等价str， 而在python3中， bytes与str绝不等价
 * python3中内置open函数默认使用utf-8编码，而python2中默认是二进制, 因此在python3中操作二进制文件应该指明'wb'或'rb'
 
-## 第4条 辅助函数取代复杂表达式
+
+
+## 第4条 辅助函数取代复杂表达式（略）
+
 ## 第5条 切割序列 slice
+
 切片时，start end越界不会出现问题，利用这一特性可限定最大长度  
 ```
 first_twenty_items = a[:20]
