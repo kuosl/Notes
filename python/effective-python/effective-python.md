@@ -39,14 +39,28 @@
 first_twenty_items = a[:20]
 last_twenty_items = a[-20:]
 ```
-切片是深拷贝  
+切片是深拷贝 
 ```
 b = a[:]
 assert b == a and b is not a
 ```
 
-## 第6条 音效切片操作内，还要同时指定start, end和stride
-容易变得费解  
+
+
+## 第6条 在单次切片操作内，不要同时指定start, end和stride
+
+如果三者全都指定，容易变得费解。
+
+另外，如果非要乃到stride(steps)时，尽量使用正值，同时忽略start和start索引。
+
+如果一定需要配合start或end索引来使用stride，那么应该分成两步：
+
+1.  先做步进式切片 						—— stride
+2.  把第1步切片结果再做第二次范围切割        —— start, end
+
+上述方法会多产生一份浅拷贝，可以考虑使用内置模块intertools的islice。
+
+
 
 ## 第7条 用列表推导来取代map filter
 ```python
@@ -980,11 +994,11 @@ Called __getattribute__(foo)
 
 
 
-## 第33条：用元类来验证子类
+## 第33条：用元类来验证子类（略）
 
-## 第34条：用元类来注册子类
+## 第34条：用元类来注册子类（略）
 
-## 第35条：用元类来注解类的属性
+## 第35条：用元类来注解类的属性（略）
 
 
 
@@ -1905,10 +1919,4 @@ stats.sort_stats('name').print_stats() #按函数名
 
 ---
 
-**请大家把意见发到slguo@fortinet.com**
-
----
-TODOLIST:
-- [ ] **收集内部培训意义，归纳整理** 
-- [ ] 补充Chpt10~35
 
