@@ -1,22 +1,22 @@
 # 第1章 用Pythonic方式思考
 ## 第2条 遵守PEP8风格  
-	• 使用4个空格缩进  
-	• 多行另一起一行时，缩进4空格  
-	• 函数与类之间应用两空行相隔  
-	• 各方法一空行相隔  
-	• 函数，变量，属性使用linux风格命名  
-	• 受保护的实例属性，应以单下划线开头  
-	• 私有的实例属性，应以两下划线开头  
-	• 类与异常，使用大写开头命名  
-	• 模块级别的常量以全大写  
-	• 类中实例方法首个参数应是self，表示对象本身  
-	• 类方法首个参数应是cls，表示类本身  
-	• 直接判断列表是否真值来判断列表是为空，如应if a: 而不是if len(a) == 0  
-	• 不要编写单行的 if for while except语句  
-	• import 语句始终諈文件开头  
-	• 引入模块时，应总使用绝对名称，而不应使用根据当前模块的路径而使用相对名称，如：引入foo包中bar模块，应完整写出from bar import foo, 而不应简写import foo  
-	• 若非要相对名称来import， 则应from . import foo  
-	• 将import语句分为三块：1标准库模块 2第三方模块 3自用模块   
+• 使用4个空格缩进  
+• 多行另一起一行时，缩进4空格  
+• 函数与类之间应用两空行相隔  
+• 各方法一空行相隔  
+• 函数，变量，属性使用linux风格命名  
+• 受保护的实例属性，应以单下划线开头  
+• 私有的实例属性，应以两下划线开头  
+• 类与异常，使用大写开头命名  
+• 模块级别的常量以全大写  
+• 类中实例方法首个参数应是self，表示对象本身  
+• 类方法首个参数应是cls，表示类本身  
+**• 直接判断列表是否真值来判断列表是为空，如应if a: 而不是if len(a) == 0**  
+• 不要编写单行的 if for while except语句  
+• import 语句始终在文件开头  
+• <u>引入模块时，应总使用绝对名称，而不应使用根据当前模块的路径而使用相对名称</u>，如：引入foo包中bar模块，应完整写出from bar import foo, 而不应简写import foo  
+• <u>若非要相对名称来import， 则应from . import foo</u>  
+• 将import语句分为三块：1标准库模块 2第三方模块 3自用模块   
 
 
 
@@ -24,15 +24,15 @@
 
 | python版本 | 含原始8位值 | 含unicode字符 |
 | ---------- | ----------- | ------------- |
-| python2    | str         | unicode       |
-| Python3    | bytes       | str           |
+| python2    | **str**     | **unicode**   |
+| Python3    | **bytes**   | **str**       |
 
 
 * 两个python版本中， unicode并没有与特定二进制编码关联
 * 到8位值转换是encode，到unicode转换是decode
-* 一定要把编解码操作写在核心代码最外围。核心代码应使用unicode，且不要假定字符编码类型。  
-* python2中7位值的ascii值时，unicode等价str， 而在python3中， bytes与str绝不等价
-* python3中内置open函数默认使用utf-8编码，而python2中默认是二进制, 因此在python3中操作二进制文件应该指明'wb'或'rb'
+* **一定要把编解码操作写在核心代码最外围。核心代码应使用unicode，且不要假定字符编码类型。**  
+* python2中7位值的ascii值时，unicode等价str， 而在<u>python3中， bytes与str绝不等价</u>
+* **python3中内置open函数默认使用utf-8编码，而python2中默认是二进制, 因此在python3中操作二进制文件应该指明'wb'或'rb'**
 
 
 
@@ -55,7 +55,7 @@ assert b == a and b is not a
 
 ## 第6条 在单次切片操作内，不要同时指定start, end和stride
 
-如果三者全都指定，容易变得费解。
+**如果三者全都指定，容易变得费解。**
 
 另外，如果非要乃到stride(steps)时，尽量使用正值，同时忽略start和start索引。
 
@@ -70,16 +70,22 @@ assert b == a and b is not a
 
 ## 第7条 用列表推导来取代map filter
 ```python
-# 列表推荐比较简洁   
+# 列表推导比较简洁
 a = [1,2,3,4]
 squres = [x ** 2 for x in a]
+# 使用map
 squres =  map(lambda x: x**2, a)
+
+# 加上条件过滤的列表推导与map，可以看出列表推导更简洁
 squres = [x ** 2 for x in a if x%2==0]
 squres =  map(lambda x: x**2, filter(lambda x: x%2==0, a))
 ```
 * 对字典dict和集set，也支持列表推荐
 
-## 第8条 不要使用含有两个以上表达式的列表推导
+
+
+## 第8条 不要使用含有两个以上表达式的列表推导（略）
+
 ## 第9条 用生成器表达式来改写数据量较大的列表推导
 **列表推导较耗内存**
 ```python
@@ -87,7 +93,7 @@ squres =  map(lambda x: x**2, filter(lambda x: x%2==0, a))
 value = [len(x) for x in open('/tmp/myfile.txt')]
 print(value)
 ```
-* 把实现列表推导所用的那种写法放在一对圆括号内，就构成了生成器表达式。  
+* **把实现列表推导所用的那种写法放在一对圆括号内，就构成了生成器表达式。**  
 * 生成器表达式在求值时会立即返回一个迭代器，而不会深入处理文件中的内容。  
 ```python
 it = (len(x) for x in open('/tmp/myfile.txt'))
@@ -95,13 +101,13 @@ print(it)
 >>>
 <generator object ... at ...>
 #使用next函数操作上步返回的迭代器
-print(next(it)
-print(next(it)
+print(next(it)）
+print(next(it)）
 ...
 ```
 
 ## 第10条：尽量使用enumerate取代range
-内置的enumerate函数可以把各种迭代器包装为生成器，以便稍后产生输出值。
+**内置的enumerate函数可以把各种迭代器包装为生成器，以便稍后产生输出值。**
 *每次返回两个值：索引和值*
 
 ```python
@@ -116,31 +122,38 @@ for i, flavor in enumerate(flavor_list):
 还可以直接指定enumerate开始计数时的值，从N开始
 enumerate(flavor_list, 2)
 
+
+
 ## 第11条：使用zip函数同时遍历两个迭代器
+
 **help(zip)**
 	zip(seq1 [, seq2 [...]]) -> [(seq1[0], seq2[0] ...), (...)]
 
 内置zip有两个问题：
-1. python2中的zip并不是生成器，它会把所有迭代器都平等的遍历一遍。因此需要使用内置模块itertools的izip函数
+1. <u>python2中的zip并不是生成器，它会把所有迭代器都平等的遍历一遍。因此需要使用内置模块itertools的izip函数</u>
 2. 若迭代器参数长度不同，zip会在较短的长度停止。 此时考虑用itertools.zip_longest函数
 
+
+
 ## 第12条：不要在for和while循环后写else块
+
 python提供了比较特殊的语法：循环后面可以直接编写else块
-	​```python
-	for i in range(3):
-		print('Loop %d" % i)
-	else
-		print('Else block!")
-	
-	>>> 正常执行，执行了else
-	Loop 0
-	Loop 1
-	Loop 2
-	Else block!
-	​```
+```python
+for i in range(3):
+	print('Loop %d" % i)
+else
+	print('Else block!")
+
+>>> 正常执行，执行了else
+Loop 0
+Loop 1
+Loop 2
+Else block!
+​```
+```
 
 可能使用人误解为：若循环没有正常执行才执行else. 
-而实际是循环中有break(即使是在最后一步break)，else才不会执行
+而**实际是循环中有break(即使是在最后一步break)，else才不执行**
 	​```python
 	for i in range(3):
 		print i
@@ -154,13 +167,13 @@ python提供了比较特殊的语法：循环后面可以直接编写else块
 	1
 	2
 	​```
-在for x in []: 或 while False: 之类的循环后的else会马上执行
+**在for x in []: 或 while False: 之类的循环后的else会马上执行**
 
 
 
-## 第13条：
+## 第13条：合理利用try/except/else/finally结构中的每个代码块
 异常处理考虑四种不同的时机：try/except/else/finally
-1. finally块: 既要将异常向上传播，又要在异常发生时执行清理工作
+1. finally块: **如果既要向上传播异常，又要在异常时执行清理工作，则使用finally.**
   ```python
   handle = open('/tmp/random_data.txt') # 可能抛出IOError
   try:
@@ -168,7 +181,7 @@ python提供了比较特殊的语法：循环后面可以直接编写else块
   finally:
   	handle.close()				    #  always runs after try
   ```
-2. else块: try块没有发生异常，就执行else块
+2. else块:  **try块没有发生异常，就执行else块**
   可以用来缩减try块中的代码量，并把没有发生异常时所要执行的语句与try/except代码块隔开
   必须有except块
   ```python
@@ -180,27 +193,40 @@ python提供了比较特殊的语法：循环后面可以直接编写else块
   	else:
   		return result_dict[key]			# May raise KeyError
   ```
+
+
+
+
 # 第2章 函数
 
-## 第14条： 尽量用异常来表示特殊情况。而不要返回None
-* 使用None这个返回值来表示特殊意义的函数，容易使用调用者犯错，因为None和0及空字符串之类的值，在条件表达式都会评估为False
-  * 除非返回值为无组，比如：第一个返回值为状态，第二个返回值才是结果，但这种方式使用不太直观
-* 函数在遇到特殊情况时，应该抛出异常，而不要返回None。调用者看到异常后，应该编写相应代码处理它们。
+## 第14条： 尽量用异常来表示特殊情况，而非返回None表示异常
+* **使用None这个返回值来表示特殊意义的函数，容易使用调用者犯错，因为None和0及空字符串之类的值，在条件表达式都会评估为False**
+  * 除非返回值为元组，比如：第一个返回值为状态，第二个返回值才是结果，但这种方式使用不太直观，也不太好，尽量别用。
+* **函数在遇到特殊情况时，应该抛出异常，而不要返回None。调用者看到异常后，应该编写相应代码处理它们。**
+
+
+
 
 ## 第15条： 了解如何在闭包里使用外围作用域的变量
-在表达式中引用变量时，python解释器将按以下顺序查找：
-	1. 当前函数作用域
-	2. 任何外围作用域（例如，包含当前函数的其它函数）
-	3. 包含当前代码的模块的作用域（也叫全局作用域，global scope)
-	4. 内置作用域(也就是包含len及str等函数的作用域)
-	5. 若没找到则抛出NameError异常
 
-给变量赋值时，规则有所不同：  
-	**在当前模块中若无定义，则在当前模块内定义这个变量，不会去上级（或外围）作用域去查找。**
-	目的是防止函数的每个赋值操作污染外围作用域
-示例代码：  
+### 引用变量查找顺序：
+
+1. 当前函数作用域
+2. 任何外围作用域（例如，包含当前函数的其它函数）
+3. 包含当前模块的作用域（也叫全局作用域，global scope)
+4. 内置作用域(也就是包含len及str等函数的作用域)
+5. **若没找到则抛出NameError异常**
+
+
+
+### 定义变量赋值规则有所不同：  
+
+1.  **在当前模块中若无定义，则在当前模块内定义这个变量，不会去上级（或外围）作用域去查找。**
+2.  目的是防止函数的每个赋值操作污染外围作用域。
 
 ```python
+#coding=utf-8
+
 def sort_priority(values, group):
 	"""sort values by prioriy group"""
 	found = False
@@ -226,17 +252,20 @@ Found!!!
 Found!!!
 Found!!!
 Found!!!
-Found: False 
+Found: False # 并没有修改闭包内函数 之外 的found变量！
 [2, 3, 5, 7, 1, 4, 6, 8]
 ```
-python3中，要想获取闭包内的数据，可以在内层空间中用nonlocal语句声明。
+
+
+仅在python3中，要想获取闭包内的数据，可以在内层空间中用nonlocal语句声明。
 
 ```python
+# Python3
 def sort_priority3(values, group):
 	"""sort values by prioriy group"""
 	found = False
 	def helper(x):
-		nonlocal found
+		nonlocal found # 声明found在外面定义了
 		if x in group:
 			found = True
 			return (0, x)
@@ -255,17 +284,21 @@ if __name__ == '__main__': numbers = [8,3,1,2,5,4,7,6]
 Found: True
 [2, 3, 5, 7, 1, 4, 6, 8]
 ```
-与nonlocal类似的是global语句声明，前者声明的是闭包的外围函数中的变量，而后者声明的是模块的全局变量。
-python2也支持global语句。
-python2不支持nonlocal语句，若想达到类似效果，可用以下技巧：
+**与nonlocal类似的是global语句声明，前者声明的是闭包的外围函数中的变量，而后者声明的是模块的全局变量。**
+**python2也支持global语句，但不支持nonlocal。**
+
+若想达到类似效果，可用以下技巧（**虽然不能直接给范围之外变量赋值，但可以改变变量内部内容，从而绕过上述限制**）
 
 ```python
+# Python2
 def sort_priority(values, group):
 	"""sort values by prioriy group"""
+    # 改外部变量声明成列表，字典等包含成员的变量
 	found2 = [False,]
 	def helper(x):
 		if x in group:
-			found2[0] = True #像是在强制的读取
+             # 虽不可改变found2的值，但可以改变found2成员值
+			found2[0] = True
 			return (0, x)
 		else:
 			return (1, x)
@@ -283,96 +316,112 @@ if __name__ == '__main__':
 Found: True
 [2, 3, 5, 7, 1, 4, 6, 8]
 ```
-最后，为了代码可读性，尽量少用global及nonlocal
 
-## 第16条： 考虑用生成器来改写直接返回列表的函数
-	1. 使用生成器有时结果更清晰:直接使用yield返回结果
-	2. 节省资源，每次调用才产生一个结果，不必一下子把所有结果计算出来
-	3. 不方便之处就是不能重复调用,因为每次调用会改变内部某些状态。
+
+**最后，为了代码可读性，尽量少用global及nonlocal**
+
+
+
+## 第16条： 考虑用生成器yield来改写直接返回列表的函数
+1. 使用生成器有时结果更清晰:直接使用yield返回结果
+2. 节省资源，每次调用才产生一个结果，不必一下子把所有结果计算出来
+3. **不方便之处就是不能重复调用,因为每次调用会改变内部某些状态**
+
+
+
 
 ## 第17条： 在参数上面迭代时，要多加小心
+
 迭代器只产生一轮结果，在抛出StopIteration异常的迭代器或生成器上面继续迭代第二轮是不会有结果的。
-在已经迭代完的迭代器上继续迭代时，有时不报错。因为for循环，list构造器及标准库中许多其它函数
-都认为正常的操作过程中完全有可能出现StopIteration异常，这些函数没办法区别这个迭代
-器本来就没有输出或是已经用完了。
+
+**在已经迭代完的迭代器上继续迭代时，有时不报错。因为for循环，list构造器及标准库中许多其它函数都认为正常的操作过程中完全有可能出现StopIteration异常，这些函数没办法区别这个迭代器本来就没有输出或是已经用完了。**
+
+
 
 ## 第18条： 用数量可变的位置参数减少视觉杂讯
+
 可以使用*args（可变数量参数）来在处理可选参数列表
 * 不使用可变数量参数
 
 ```python
-	def log(msg, vals):
-		if not vals:
-			print(msg)
-		else:
-			val_str = ', '.join(str(x) for x in vals)
-			print('%s: %s' % (msg, val_str))
+def log(msg, vals):
+	if not vals:
+		print(msg)
+	else:
+		val_str = ', '.join(str(x) for x in vals)
+		print('%s: %s' % (msg, val_str))
 
-	log('my num are', [1,2])
-	log('hi', [])
-	log('hi')
+log('my num are', [1,2])
+log('hi', [])
+log('hi')
 
 >>>
-      8 log('my num are', [1,2])
-      9 log('hi', []) #必须使用一个空表占位
----> 10 log('hi') #否则...
-
+   8 log('my num are', [1,2])
+   9 log('hi', []) #必须使用一个空表占位
+-> 10 log('hi') #否则出现异常
 TypeError: log() takes exactly 2 arguments (1 given)
 ```
 
 * 使用可变数量参数
 
 ```python
-	def log(msg, *args):
-		if not args:
-			print(msg)
-		else:
-			val_str = ', '.join(str(x) for x in args)
-			print('%s: %s' % (msg, val_str))
+def log(msg, *args):
+	if not args:
+		print(msg)
+	else:
+		val_str = ', '.join(str(x) for x in args)
+		print('%s: %s' % (msg, val_str))
 
-	log('my num are', [1,2])
-	log('hi', []) # 空表不再必要，留着它也会原样输出
-	log('hi')     # OK
+log('my num are', [1,2])
+log('hi', []) # 空表不再必要，留着它也会原样输出
+log('hi')     # OK
+# >>>
+# my num are: [1, 2]
+# hi: [] 
+# hi
 
->>>
-my num are: [1, 2]
-hi: [] 
-hi
-
-	# 若参数中出现变量则需要在参数前加上星*
-	fav = [7, 33, 9]
-	log('Favortie colors', *fav)
-
->>>
-Favorite colrs: 7, 33, 9
+fav = [7, 33, 9]
+log('Favortie colors', fav)
+# >>>
+# Favorite colrs: 7, 33, 9
 ```
 
 **接受数量可变参数会带来两个问题：**
 1. 可变参数在付给函数时，总是要先转化成元组。这意味着若拿生成器作为参数来调用，python必须先把生成器完整的迭代一轮，然后放在元组中，这可能消耗大量内存。
   **因此只有确认可变数量参数只是有限个数时才应该使用。**
-2. 若以后为函数添加新的位置参数时，如果只修改函数定义而不修改旧有的调用代码，则会产生难以发现的问题。
-  因为新添加的位置参数会被它后面的可变数量参数掩盖。
-  为避免这种情况，应当使用关键字指定的参数来扩展这种接受*args的函数。
+2. **若以后为函数添加新的位置参数时，如果只修改函数定义而不修改旧有的调用代码，则会产生难以发现的问题**。因为新添加的位置参数会被它后面的可变数量参数掩盖。
+  **为避免这种情况，应当使用关键字指定的参数来扩展这种接受*args的函数。**
+
+
+
 
 ## 第19条： 用关键字参数来表达可选的行为
-位置参数必须出现在关键字参数之前。
+
+**位置参数必须出现在关键字参数之前，关键字参数只能出现在位置参数之后。**
 关键字参数有三个好处：
-	1. 容易理解
-	2. 可提供默认值
-	3. 上文提到的扩充数量可变参数函数
+1. 容易理解
+2. 可提供默认值
+3. 上文提到的扩充数量可变参数函数
+
+
+
 
 ## 第20条： 用None和文档字符串来描述具有动态默认值的参数
-动态默认值参数：比如想用当前时间（动态变化的）表示when的默认值
 
-```
+**动态默认值参数：**比如想用当前时间（动态变化的）表示when的默认值
+
+```python
 def log(msg, when=datetime.now())
 	'''肯定会执行失败，因为when只执行一次，在模块加载函数时确认when的值'''
 	print("%s: %s" % (when, msg))
 ```
-在Python中若想正确的实现动态默认值，习惯上把默认值设为None，并在文档字符串docstring
-里面把None所对应的实际行为描述出来。编写函数代码时，若发现该参数值为None，则将其设为实际的默认值。
+**在Python中若想正确的实现动态默认值，习惯上把默认值设为None，并在文档字符串docstring里面把None所对应的实际行为描述出来。编写函数代码时，若发现该参数值为None，则将其设为实际的默认值。**
 
 ```python
+#coding=utf-8
+from datetime import datetime
+from time import sleep
+
 def log(msg, when=None):
 	"""
 	Log a message whith a timestamp.
@@ -388,14 +437,12 @@ def log(msg, when=None):
 log('Hi there!')
 sleep(0.1)
 log('Hi again!')
-
->>>
-2017-11-11 11:11:11.0555 Hi there!
-2017-11-11 11:11:11.1555 Hi Again!
+# >>>
+# 2017-11-11 11:11:11.0555 Hi there!
+# 2017-11-11 11:11:11.1555 Hi Again!
 ```
-若参数的实际默认值是可变类型(mutable), 比如{}, []等动态的值，一定要使用None作为形参的默认值。
-形参中指定的默认值只会在模块加载时评估一次，所有调用这个函数的地方都共享一个default值，造成逻辑问题。
-正确的办法就是使default的默认值设为None
+**若参数的实际默认值是可变类型(mutable), 比如{}, []等动态的值，一定要使用None作为形参的默认值。**
+**形参中指定的默认值只会在模块加载时评估一次，所有调用这个函数的地方都共享一个default值，造成逻辑问题。
 
 ```python
 # 错误的默认值
@@ -407,10 +454,7 @@ def decode(data, default={})
 
 # 正确的默认值应该是None
 def decode2(data, default=None)
-	"""
-	Load JSON data from a string.
-	
-
+	"""Load JSON data from a string.
 	Args:
 		data: JSON data to decode.
 		default: Value to return if decoding fails.
@@ -424,39 +468,36 @@ def decode2(data, default=None)
 		return defult
 ```
 
+
+
 ## 第21条： 用只能以关键字形式指定的参数来确保代码明晰
-python3中，可以定义一种只能以关键字形式来指定的参数，从而确保调用该函数的代码读起来会比较明确。
-参数列表中的*号，标志着位置参数就此终结，之后的那些参数，都只能以关键字形式来指定。
+
+**python3中，可以定义一种只能以关键字形式来指定的参数，从而确保调用该函数的代码读起来会比较明确。**
+**参数列表中的*号，标志着位置参数就此终结，之后的那些参数，都只能以关键字形式来指定。**
 
 ```python3
 # Python 3
-def safe_division(number, divisor, *,
-				  ignore_overflow=False,
-				  ignore_zero_division=False):
+def safe_division(number, divisor, 
+				   *,                    # 标志着位置参数就此终结，后面的参数只能以关键字形式指定
+				  ignore_overflow=False, ignore_zero_division=False):
 	pass
 
-
-In [3]: safe_division(1,2,True, False)
+In [3]: safe_division(1,2,True, False)    # 错误调用示例，只能指定两个位置参数
 >>>
 ---------------------------------------------------------------------------
 TypeError                                 Traceback (most recent call last)
 <ipython-input-3-87d11d5dc098> in <module>()
 ----> 1 safe_division(1,2,True, False)
-
 TypeError: safe_division() takes 2 positional arguments but 4 were given
-
 In [4]: safe_division(1,2,ignore_overflow=True, ignore_zero_division=False)
->>>
 
-In [5]: safe_division(1,2) # 不指定位置参数，使用默认参数
+In [5]: safe_division(1,2)                # 不指定位置参数，使用默认参数
 >>>
 
 ```
 
-在python2 中实现只能以关键字来指定的参数
-python2 中没有以上的语法支持。
-不过可以在参数列表中使用**操作符，并且令函数在遇到无效的调用时抛出TypeErrors, 从而实现以上类似功能。
-同以上python3的方式相比，接受任意数量的关键字参数，因此需要在函数实现排除不想要的位置参数。
+**python2 中没有以上的语法支持。不过可以在参数列表中使用**参数机制，并且令函数在遇到无效的调用时抛出TypeErrors, 从而实现以上类似功能。
+从但是同以上python3的方式相比，python2可以接受任意数量的关键字参数，因此需要在函数实现排除不想要的位置参数。
 用pop方法把期待的关键字参数从kwargs字典中取走，若字典的键里面没有那个关键字，那么pop的第二个参数就会成为默认值。
 最后为了防止调用者提供无效参数值，需要确认kwargs字典里面已经没有关键字参数了。
 
@@ -469,21 +510,32 @@ def safe_division(numberm, divisor, **kwargs)L
 		raise TypeError('Unexpected ** kwargs: %r' % kwargs)
 	# ...
 ```
-同Python3版本的函数一样不接受位置参数
+同Python3版本的函数一样不接受位置参数。
+
+
 
 # 第3章 类与继承
 Python提供了继承，多态，封闭等各种OOB特性。
 
+
+
 ## 第22条： 尽量用辅助类来维护程序的状态，而不要用字典和元组
+
 程序状态较简单时才用字典或元组，否则使用辅助类完成状态管理。
 
+
+
 ## 第23条：简单的接口应该是传递函数，而不是类的实例
+
 函数可以像参数一样传递，因为函数是一级对象。
 若定义类的__call__方法，则类的实例就可以像普通函数一样调用。
 若需要函数保存运行状态，则应该把函数定义为类，并实现__call__, 而非闭包。
-	这样代码更清晰，而且__call__明确了类的实例作为闭包使用。
+这样代码更清晰，而且__call__明确了类的实例作为闭包使用。
+
+
 
 ## 第24条：以@classmethod的形式的多态去通用地构建对象
+
 在python中不仅对象支持多态，类也支持多态。
 
 多态，使得继承体系中的多个类都能以各自所独有的方式来实现某个方法，有相同的接口，但执行不同的行为。
@@ -507,7 +559,6 @@ class PathInputData(InputData)
 		return open(self.path).read()
 
 # 可能有InputData的其它子类，比如从网络读取并解压数据
-# ...
 
 ###################################################################################
 
@@ -529,7 +580,6 @@ class LineCounterWorker(Worker):
         self.result = data.count('\n')
     def reduce(self, other):
 		self.result += other.result
-
        ################################################################################################
 #怎样构建对象并协调MapReduce流程呢？
 #手工构建相关对象，并通过某些辅助函数将这些对象联系起来。
@@ -650,8 +700,6 @@ with TemporaryDirectory() as tmpdir:
     result = mapreduce(LineCountWorker, PathInputData, config) 
 ```
 
-
-
 **总结：**
 
 *   python中每个类只能有一个构造器，那就是\_\_init\_\_方法。
@@ -695,7 +743,7 @@ print "(5 + 5) * 2 == %d" % foo.value
 >> 15
 ```
 
-还有问题是出现在钻石型继承结构（比如两个基类又是同一类的子类）：这个子类就会多次调用它两个基类的共同基类的初始化函数。
+还有问题是出现在**钻石型继承结构（比如两个基类又是同一类的子类）：这个子类就会多次调用它两个基类的共同基类的初始化函数。**
 
 ```python
 # 钻石型继承关系，多次调用上层某个基类的初始化函数(__init__)
@@ -832,7 +880,7 @@ r0 = OldResistor(2)
 r0.set_ohms(r0.get_ohms() + 3)
 ```
 
-可以使用@property修饰器和setter方法来做。
+**可以使用@property修饰器和setter方法来做。**
 
 ```python
 class VolateResistance(Resistor)：
