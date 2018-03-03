@@ -697,7 +697,7 @@ def mapreduce(worker_class, input_class, config)通用:
 with TemporaryDirectory() as tmpdir:
     write_test_files(tmpdir)
     config = {'data_dir': tmpdir}
-    result = mapreduce(LineCountWorker, PathInputData, config) 
+    result = mapreduce(LineCountWorker, PathInputData, config)
 ```
 
 **总结：**
@@ -772,7 +772,11 @@ print "5 * 2 + 5 == 15 and is ", foo.value
 #>> 5 * 2 + 5 == 15 and is 10
 ```
 
-引用python2的super方式解决钻石型继承问题
+引用python2的**super方式解决钻石型继承问题**
+
+**注意MRO计算顺序是从右向左的！！！**
+
+<u>语法是： super(ThisClsName, self).xxx()</u>
 
 ```python
 class MyBaseCls(object):
@@ -800,7 +804,9 @@ print "GoodWay is: 5 * (5 + 2) == 35 and is ", foo.value
 
 ```
 
-python2的super必须传入本类的名称。而**python3可以使用\_\_class\_\_可替代本类名称**。
+python2的super必须传入本类的名称。而**python3可以<u>使用\_\_class\_\_可替代本类名称</u>**。
+
+<u>语法是： super(\_\_class\_\__, self).xxx()</u>
 
 ```python
 class MyBaseCls(object):
@@ -827,6 +833,8 @@ print("GoodWay is: 5 * 5 + 2 == 27 and is ", foo.value)
 #>> GoodWay is: 5 * 5 + 2 == 27 and is  35
 ```
 
+
+
 **总结：应该使用内置super函数初始化父类。**
 
 
@@ -837,7 +845,7 @@ print("GoodWay is: 5 * 5 + 2 == 27 and is ", foo.value)
 
 mix-in类是一种小型的类，它只定义其它类可能需要提供的一套附加方法，而不定义自己的实例属性，此外它也不要求使用者调用自己的\_\_init\_\_初始函数。
 
-
+**也就是接口类而已**
 
 ## 第27条：多用public属性，少用private属性
 
@@ -856,6 +864,8 @@ mix-in类是一种小型的类，它只定义其它类可能需要提供的一�
 这里定义了一系列的抽象基类，它们提供了每一种容器所应具体的常用接口。如果自定义的容器类忘记实现这些接口，collections.abc模块会指出这些错误。
 
 它并不会帮你实现具体的通用接口，它只是提供了一些抽象接口，确保用户编写了必备函数成员。
+
+**仅是个接口规范！**
 
 
 
@@ -879,6 +889,8 @@ class OldResistor(object):
 r0 = OldResistor(2)
 r0.set_ohms(r0.get_ohms() + 3)
 ```
+
+
 
 **可以使用@property修饰器和setter方法来做。**
 
@@ -942,7 +954,7 @@ Exam.__dict__['writing_grade'].__get__(exam)
 
 ## 第32条：用\_\_getattr\_\_, \_\_getattribute\_\_和\_\_setattr\_\_实现所需生成的属性
 
-类的属性访问钩子函数1：类对象的实例字典中找不到查询的属性，那么系统就会调用\_\_getattr\_\_。
+类的属性访问钩子函数1：**类对象的实例字典中找不到查询的属性，那么系统就会调用\_\_getattr\_\_。**
 
 ```python
 class LazyDB(object):
@@ -968,7 +980,7 @@ Value for foo
 {'foo': 'Value for foo', 'exists': 5}
 ```
 
-类的属性访问钩子函数1：即使在类对象的实例字典中找到了查询的属性，那么系统也会先调用\_\_getattribute\_\_。
+类的属性访问钩子函数1：**即使在类对象的实例字典中找到了查询的属性，那么系统也会先调用\_\_getattribute\_\_。**
 
 ```python
 class ValidatingDB(object):
@@ -989,18 +1001,18 @@ data = ValidatingDB()
 print('exists:', data.exists)
 print('foo:  ', data.foo)
 print('foo:  ', data.foo)
-#>>>
-Called __getattribute__(exists)
-exists: 5
-Called __getattribute__(foo)
-foo:   foo
-Called __getattribute__(foo) # 此时已经调用了setattr
-foo:   Value for foo
+# >>>
+# Called __getattribute__(exists)
+# exists: 5
+# Called __getattribute__(foo)
+# foo:   foo
+# Called __getattribute__(foo) # 此时已经调用了setattr
+# foo:   Value for foo
 ```
 
 实现通用的功能时，我们经常会在Python代码里使用内置的hasattr函数来判断对象是否已经拥有了相关的属性，并用内置的getattr函数来获取属性值。
 
-若类实现了\_\_getattribute\_\_函数，那么每次在对象上面调用hasattr或getattr时，\_\_getattribute\_\_都会执行。
+**若类实现了\_\_getattribute\_\_函数，那么每次在对象上面调用hasattr或getattr时，\_\_getattribute\_\_都会执行。**
 
 **使用\_\_getattribute\_\_要特别小心：若在它的实现内部访问了self.data，则会导致自我无限循环**。
 
@@ -1078,6 +1090,10 @@ print(out.decode('utf-8'))
 Hello from the child
 ```
 
+*communicate(self, input=None): 与子进程进行通信, 向input发送数据，返回tuple(stdout, stderr), 从stdout和sterr获取输出。*
+
+
+
 * 子进程会独立于父进程运行，父进程指python解释器。父进程可定期查询子进程状态，同时处理其它事务。
 
 ```python
@@ -1136,16 +1152,18 @@ print("Finished in %.3f seconds" % (end-start))
 
 > 多线程频繁的获取，释放GIL带来的资源消耗，使多线程不适合CPU密集型的多任务执行。 只适合于IO密集型的多任务。
 
-
 ## 第38条 在线程中使用Lock来防止数据竞争
 
-上述python多线程的执行方式第2条说明，GIL并不保证多线程和的IO读写若不加锁同样出现数据竞争。
+上述python多线程的执行方式第2条说明，**GIL并不保证<u>多线程</u>的IO读写若不加锁同样出现数据竞争。**
 > 比如一个线程的IO代码块执行了一部分时，也会被迫让出GIL, 另一个线程获取了GIL，然后对同一数据区域的读写操作。
 
-使用互斥锁来保护数据结构，如Lock类, 使同一时刻只能一个线程获得锁。  
+**使用互斥锁来保护数据结构，如Lock类, 使同一时刻只能一个线程获得锁。**  
 > 另一个线程获取了GIL，但没有获取Lock同样也不能执行加锁保护的读写代码区域
 
+
+
 ## 第39条 用Queue来协调各线程之间的工作
+
 内置的queue模块的类Queue能解决事务协作出的自编队列中的各种问题。主要因为：  
 1. 自编输入队列无数据时会不断的尝试读取导致CPU利用率较低： Queue类的get()操作会阻塞住直到新数据加入
 2. 自编输出队列若无法及时处理，会导致数据膨胀过多：Queue类的put()操作在达到一定数据量时也会阻塞，直到数据被消费(Queue在定义时指定大小)
