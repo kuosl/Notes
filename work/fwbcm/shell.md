@@ -1,2 +1,0 @@
-- [ ] implement the CLI system
-- [ ] CLI and API commmunication

@@ -1,1 +1,0 @@
-* fortiweb manager notes
