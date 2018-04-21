@@ -269,3 +269,29 @@ In [5]: v2 = d2.viewitems()
 # 还有其它视图 viewitems, viewkeyss
 ```
 
+字典是无序的，若希望按元素添加顺序输出结果，可以用OrderedDict.
+
+#### 集合
+
+正如元组相当于只读版本的list， set也有只读版本的frozenset.
+
+集合和字典，列表最大的不同：
+
+* 元素不能重复。
+* 支持集合运算。
+  * 判断集合中是否有特定元素。 "c" in set("abcd") ==> true
+  * set("abc") is set("abc") ==》 false
+  * **set("abc")  == set("abc") ==》 true**
+  * set("abc")  != set("abc") ==》 False
+  * **set("abcd")  >= set("abc") ==》 true 超集判断**
+  * **set("abc")  < set("abcd") ==》 true 子集判断**
+  * set("abc")  set("cdef") ==》 set(['a' ... 'f'])
+  * set("abcd") & set('cde') ==》 set(['c', 'd']) 交集
+  * set("abcd") - set('cde') ==》 set(['a', 'b'])  差集，左有右无
+  * set("abcd") ^ set('cde') ==》 set(['a', 'e',])  对称差集，仅出现在左或右的元素
+  * set("abcd").isdisjointset('ab') ==》 False, 判断有无交集
+  * |= 并集操作
+  * &= 交集操作
+  *  -= 差集操作
+  * ^= 对称差集操作
+
